@@ -1,11 +1,43 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Ponte — Prancha de Comunicação</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0D9488">
+  <title>Ponte — Prancha de Comunicação</title>
+  <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-    <p>Ponte — estrutura inicial. A prancha de comunicação será construída no marco M2.</p>
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 48 32" aria-hidden="true">
+        <path d="M4 26 C 4 10, 44 10, 44 26" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+        <line x1="4" y1="26" x2="44" y2="26" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+        <line x1="14" y1="26" x2="14" y2="18.5" stroke="currentColor" stroke-width="2.5"/>
+        <line x1="24" y1="26" x2="24" y2="16" stroke="currentColor" stroke-width="2.5"/>
+        <line x1="34" y1="26" x2="34" y2="18.5" stroke="currentColor" stroke-width="2.5"/>
+      </svg>
+      <span class="brand-name">ponte</span>
+    </div>
+    <nav class="topbar-actions">
+      <button id="btn-add" class="btn-ghost" aria-label="Adicionar símbolo" hidden>＋</button>
+      <a class="btn-ghost" href="/dashboard.html" aria-label="Painel do terapeuta">📈</a>
+    </nav>
+  </header>
+
+  <section class="sentence-area" aria-label="Frase montada">
+    <div id="sentence-bar" class="sentence-bar" aria-live="polite"></div>
+    <div class="sentence-actions">
+      <button id="btn-speak" class="btn-action btn-speak" aria-label="Falar frase">▶ Falar</button>
+      <button id="btn-undo" class="btn-action" aria-label="Apagar último símbolo">⌫</button>
+      <button id="btn-clear" class="btn-action" aria-label="Limpar frase">✕</button>
+    </div>
+  </section>
+
+  <section id="suggestion" class="suggestion" aria-label="Sugestão de frase" hidden></section>
+
+  <main id="grid" class="grid" aria-label="Prancha de símbolos"></main>
+
+  <script src="/app.js"></script>
 </body>
 </html>
