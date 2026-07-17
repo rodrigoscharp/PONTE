@@ -15,11 +15,17 @@ const CELL_CLASS = {
 };
 
 async function init() {
-  const profiles = await fetch(`${API}/profiles`).then((r) => r.json());
-  state.childId = profiles[0].id;
-  state.symbols = await fetch(`${API}/symbols?childId=${state.childId}`).then((r) => r.json());
-  renderGrid();
-  renderSentence();
+  try {
+    const profiles = await fetch(`${API}/profiles`).then((r) => r.json());
+    if (!profiles.length) throw new Error('nenhum perfil');
+    state.childId = profiles[0].id;
+    state.symbols = await fetch(`${API}/symbols?childId=${state.childId}`).then((r) => r.json());
+    renderGrid();
+    renderSentence();
+  } catch {
+    document.getElementById('grid').innerHTML =
+      '<p class="load-error">Não foi possível carregar a prancha. Verifique a conexão e recarregue a página.</p>';
+  }
 }
 
 function renderGrid() {

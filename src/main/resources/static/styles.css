@@ -159,3 +159,10 @@ button:focus-visible, a:focus-visible {
   .cell { transition: none; }
   .cell:active { transform: none; }
 }
+
+.load-error {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 1.1rem;
+  padding: 1rem;
+}
