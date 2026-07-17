@@ -29,12 +29,18 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET' || url.origin !== location.origin) return;
 
   if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/uploads/')) {
-    // network-first com fallback: a prancha carrega offline com os últimos dados
+    // network-first com fallback: a prancha carrega offline com os últimos dados.
+    // Só respostas 2xx entram no cache — um 500 transitório não pode virar
+    // o "último dado bom" servido offline.
     event.respondWith(
       fetch(event.request)
         .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((cache) => cache.put(event.request, copy));
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE)
+              .then((cache) => cache.put(event.request, copy))
+              .catch(() => { /* falha ao cachear não afeta a resposta */ });
+          }
           return res;
         })
         .catch(() => caches.match(event.request))
