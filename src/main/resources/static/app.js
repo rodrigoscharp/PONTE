@@ -187,4 +187,35 @@ document.getElementById('btn-undo').addEventListener('click', () => {
 
 document.getElementById('btn-clear').addEventListener('click', clearSentence);
 
+function appendCell(symbol) {
+  // append-only: o símbolo novo entra no fim; os existentes não são tocados
+  state.symbols.push(symbol);
+  document.getElementById('grid').appendChild(createCell(symbol));
+}
+
+function setupAddSymbol() {
+  const dialog = document.getElementById('add-dialog');
+  const form = document.getElementById('add-form');
+
+  document.getElementById('btn-add').addEventListener('click', () => dialog.showModal());
+  document.getElementById('add-cancel').addEventListener('click', () => dialog.close());
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const data = new FormData(form);
+    data.append('childId', state.childId);
+    try {
+      const res = await fetch(`${API}/symbols/custom`, { method: 'POST', body: data });
+      if (!res.ok) throw new Error();
+      appendCell(await res.json());
+      form.reset();
+      dialog.close();
+    } catch {
+      alert('Não foi possível adicionar o símbolo. Verifique a conexão e tente de novo.');
+    }
+  });
+}
+
+setupAddSymbol();
+
 init();
