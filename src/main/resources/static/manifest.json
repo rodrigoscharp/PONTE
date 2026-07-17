@@ -1,0 +1,19 @@
+{
+  "name": "Ponte — Comunicação",
+  "short_name": "Ponte",
+  "description": "Prancha de comunicação alternativa e aumentativa (CAA)",
+  "lang": "pt-BR",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#F6F3EE",
+  "theme_color": "#0D9488",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

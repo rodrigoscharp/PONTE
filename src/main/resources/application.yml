@@ -12,7 +12,9 @@ spring:
     open-in-view: false
   h2:
     console:
-      enabled: true
+      # console desabilitado: dados de uso de criança sem autenticação no MVP
+      # (reabilitar só em ambiente de desenvolvimento)
+      enabled: false
       path: /h2-console
   servlet:
     multipart:
