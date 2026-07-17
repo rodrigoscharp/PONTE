@@ -36,8 +36,8 @@ body {
   align-items: center;
   padding: 0.5rem 1rem;
 }
-.brand { display: flex; align-items: center; gap: 0.5rem; color: var(--cat-acoes); }
-.brand-mark { width: 2rem; height: auto; }
+.brand { display: flex; align-items: center; gap: 0.5rem; color: #07205E; /* navy da logo oficial */ }
+.brand-mark { height: 2.4rem; width: auto; display: block; }
 .brand-name { font-size: 1.25rem; font-weight: 800; letter-spacing: 0.02em; }
 .topbar-actions { display: flex; gap: 0.5rem; }
 .btn-ghost {

@@ -1,4 +1,4 @@
-const CACHE = 'ponte-v2'; // bump a cada mudança de asset estático
+const CACHE = 'ponte-v3'; // bump a cada mudança de asset estático
 const SHELL = [
   '/',
   '/index.html',
@@ -9,6 +9,7 @@ const SHELL = [
   '/manifest.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
+  '/icons/logo-mark.png',
 ];
 
 self.addEventListener('install', (event) => {
