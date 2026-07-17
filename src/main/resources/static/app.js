@@ -196,12 +196,21 @@ function appendCell(symbol) {
 function setupAddSymbol() {
   const dialog = document.getElementById('add-dialog');
   const form = document.getElementById('add-form');
+  const cancelButton = document.getElementById('add-cancel');
+  const submitButton = form.querySelector('button[type="submit"]');
 
   document.getElementById('btn-add').addEventListener('click', () => dialog.showModal());
-  document.getElementById('add-cancel').addEventListener('click', () => dialog.close());
+  cancelButton.addEventListener('click', () => {
+    form.reset();
+    dialog.close();
+  });
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    // trava os botões durante o envio: evita duplo toque (símbolo duplicado)
+    // e cancelamento no meio do envio (símbolo apareceria após fechar)
+    submitButton.disabled = true;
+    cancelButton.disabled = true;
     const data = new FormData(form);
     data.append('childId', state.childId);
     try {
@@ -212,6 +221,9 @@ function setupAddSymbol() {
       dialog.close();
     } catch {
       alert('Não foi possível adicionar o símbolo. Verifique a conexão e tente de novo.');
+    } finally {
+      submitButton.disabled = false;
+      cancelButton.disabled = false;
     }
   });
 }
