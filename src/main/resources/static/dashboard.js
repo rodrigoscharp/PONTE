@@ -17,18 +17,28 @@ const CATEGORY_NAMES = {
 };
 
 async function init() {
-  const profiles = await fetch(`${API}/profiles`).then((r) => r.json());
-  const child = profiles[0];
-  document.getElementById('child-name').textContent = child.displayName;
+  try {
+    const profiles = await fetch(`${API}/profiles`).then((r) => r.json());
+    if (!profiles.length) throw new Error('nenhum perfil');
+    const child = profiles[0];
+    document.getElementById('child-name').textContent = child.displayName;
 
-  const summary = await fetch(`${API}/usage/summary?childId=${child.id}`).then((r) => r.json());
+    const summary = await fetch(`${API}/usage/summary?childId=${child.id}`).then((r) => r.json());
 
-  document.getElementById('tile-taps').textContent = summary.totalTaps;
-  document.getElementById('tile-sentences').textContent = summary.sentencesSpoken;
-  document.getElementById('tile-predictions').textContent = summary.predictionsAccepted;
+    document.getElementById('tile-taps').textContent = summary.totalTaps;
+    document.getElementById('tile-sentences').textContent = summary.sentencesSpoken;
+    document.getElementById('tile-predictions').textContent = summary.predictionsAccepted;
 
-  renderBars(summary.topSymbols);
-  renderLegend(summary.topSymbols);
+    renderBars(summary.topSymbols);
+    renderLegend(summary.topSymbols);
+  } catch {
+    const bars = document.getElementById('bars');
+    bars.innerHTML = '';
+    const error = document.createElement('p');
+    error.className = 'empty';
+    error.textContent = 'Não foi possível carregar os dados. Verifique a conexão e recarregue a página.';
+    bars.appendChild(error);
+  }
 }
 
 function renderBars(topSymbols) {
