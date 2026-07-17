@@ -68,6 +68,7 @@ function onSymbolTap(symbol) {
   state.sentence.push(symbol);
   renderSentence();
   recordEvent('SYMBOL_TAP', symbol.id);
+  maybeSuggest();
 }
 
 function speak(text) {
@@ -106,6 +107,7 @@ function sentenceText() {
 function clearSentence() {
   state.sentence = [];
   renderSentence();
+  maybeSuggest();
 }
 
 // Registro de eventos de uso com fila offline: o evento entra na fila
@@ -183,9 +185,50 @@ document.getElementById('btn-speak').addEventListener('click', () => {
 document.getElementById('btn-undo').addEventListener('click', () => {
   state.sentence.pop();
   renderSentence();
+  maybeSuggest();
 });
 
 document.getElementById('btn-clear').addEventListener('click', clearSentence);
+
+async function maybeSuggest() {
+  const el = document.getElementById('suggestion');
+  if (state.sentence.length < 2) {
+    el.hidden = true;
+    el.innerHTML = '';
+    return;
+  }
+  try {
+    const res = await fetch(`${API}/predictions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        childId: state.childId,
+        symbolIds: state.sentence.map((s) => s.id),
+      }),
+    });
+    if (!res.ok) return;
+    const { suggestions } = await res.json();
+    if (suggestions.length > 0) showSuggestion(suggestions[0]);
+  } catch {
+    // offline: sem sugestão — a prancha continua funcionando normalmente
+  }
+}
+
+function showSuggestion(text) {
+  const el = document.getElementById('suggestion');
+  el.innerHTML = '';
+  const chip = document.createElement('button');
+  chip.type = 'button';
+  chip.className = 'suggestion-chip';
+  chip.textContent = `💡 ${text}`;
+  chip.addEventListener('click', () => {
+    speak(text);
+    recordEvent('PREDICTION_ACCEPTED', null);
+    clearSentence();
+  });
+  el.appendChild(chip);
+  el.hidden = false;
+}
 
 function appendCell(symbol) {
   // append-only: o símbolo novo entra no fim; os existentes não são tocados
