@@ -1,4 +1,4 @@
-const CACHE = 'ponte-v1';
+const CACHE = 'ponte-v2'; // bump a cada mudança de asset estático
 const SHELL = [
   '/',
   '/index.html',
@@ -7,7 +7,8 @@ const SHELL = [
   '/dashboard.html',
   '/dashboard.js',
   '/manifest.json',
-  '/icons/icon.svg',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
 ];
 
 self.addEventListener('install', (event) => {
