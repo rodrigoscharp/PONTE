@@ -111,46 +111,63 @@ function clearSentence() {
 // Registro de eventos de uso com fila offline: o evento entra na fila
 // local primeiro e é enviado quando houver rede (sala de aula sem
 // internet garantida). occurredAt é gravado no momento do toque.
+// Um evento só sai da fila DEPOIS do envio confirmado — fechar a aba
+// no meio do envio não perde nada (no pior caso, reenvia).
 const QUEUE_KEY = 'ponte.eventQueue';
 let flushing = false;
 
+function readQueue() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return []; // storage corrompido: recomeça a fila em vez de travar os toques
+  }
+}
+
+function writeQueue(queue) {
+  try {
+    localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+  } catch {
+    // sem espaço no storage: o evento é descartado, mas o toque não falha
+  }
+}
+
 function recordEvent(eventType, symbolId) {
-  const queue = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]');
+  const queue = readQueue();
   queue.push({
     childId: state.childId,
     symbolId,
     eventType,
     occurredAt: new Date().toISOString(),
   });
-  localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+  writeQueue(queue);
   flushQueue();
 }
 
 async function flushQueue() {
   if (flushing || !navigator.onLine) return;
-  const queue = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]');
-  if (queue.length === 0) return;
-
   flushing = true;
-  localStorage.setItem(QUEUE_KEY, '[]');
-  const failed = [];
-  for (const event of queue) {
-    try {
-      const res = await fetch(`${API}/usage-events`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(event),
-      });
-      if (!res.ok) failed.push(event);
-    } catch {
-      failed.push(event);
+  try {
+    let queue = readQueue();
+    while (queue.length > 0) {
+      try {
+        const res = await fetch(`${API}/usage-events`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(queue[0]),
+        });
+        if (!res.ok) break; // backend recusou: tenta de novo no próximo flush
+      } catch {
+        break; // sem rede no meio do flush: o restante fica na fila
+      }
+      queue = readQueue();
+      queue.shift(); // novos eventos entram só no fim, então [0] é o que acabou de ser enviado
+      writeQueue(queue);
     }
+  } finally {
+    flushing = false;
   }
-  if (failed.length > 0) {
-    const current = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]');
-    localStorage.setItem(QUEUE_KEY, JSON.stringify(failed.concat(current)));
-  }
-  flushing = false;
 }
 
 window.addEventListener('online', flushQueue);
