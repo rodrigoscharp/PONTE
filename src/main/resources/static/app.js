@@ -157,12 +157,14 @@ async function flushQueue() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(queue[0]),
         });
-        if (!res.ok) break; // backend recusou: tenta de novo no próximo flush
+        // 4xx = rejeição definitiva (ex.: consentimento revogado): descarta o
+        // evento para não travar a fila; 5xx = problema transitório: tenta depois.
+        if (res.status >= 500) break;
       } catch {
         break; // sem rede no meio do flush: o restante fica na fila
       }
       queue = readQueue();
-      queue.shift(); // novos eventos entram só no fim, então [0] é o que acabou de ser enviado
+      queue.shift(); // novos eventos entram só no fim, então [0] é o que foi enviado ou descartado
       writeQueue(queue);
     }
   } finally {
