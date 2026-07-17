@@ -22,6 +22,7 @@ async function init() {
     state.symbols = await fetch(`${API}/symbols?childId=${state.childId}`).then((r) => r.json());
     renderGrid();
     renderSentence();
+    flushQueue(); // reenviar eventos que ficaram na fila de uma sessão offline
   } catch {
     document.getElementById('grid').innerHTML =
       '<p class="load-error">Não foi possível carregar a prancha. Verifique a conexão e recarregue a página.</p>';
@@ -107,10 +108,52 @@ function clearSentence() {
   renderSentence();
 }
 
-// Registro de eventos de uso — a implementação com fila offline entra na Task 5.
+// Registro de eventos de uso com fila offline: o evento entra na fila
+// local primeiro e é enviado quando houver rede (sala de aula sem
+// internet garantida). occurredAt é gravado no momento do toque.
+const QUEUE_KEY = 'ponte.eventQueue';
+let flushing = false;
+
 function recordEvent(eventType, symbolId) {
-  console.debug('usage-event', eventType, symbolId);
+  const queue = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]');
+  queue.push({
+    childId: state.childId,
+    symbolId,
+    eventType,
+    occurredAt: new Date().toISOString(),
+  });
+  localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+  flushQueue();
 }
+
+async function flushQueue() {
+  if (flushing || !navigator.onLine) return;
+  const queue = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]');
+  if (queue.length === 0) return;
+
+  flushing = true;
+  localStorage.setItem(QUEUE_KEY, '[]');
+  const failed = [];
+  for (const event of queue) {
+    try {
+      const res = await fetch(`${API}/usage-events`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(event),
+      });
+      if (!res.ok) failed.push(event);
+    } catch {
+      failed.push(event);
+    }
+  }
+  if (failed.length > 0) {
+    const current = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]');
+    localStorage.setItem(QUEUE_KEY, JSON.stringify(failed.concat(current)));
+  }
+  flushing = false;
+}
+
+window.addEventListener('online', flushQueue);
 
 document.getElementById('btn-speak').addEventListener('click', () => {
   if (state.sentence.length === 0) return;
