@@ -36,6 +36,9 @@ class CustomSymbolApiTest {
     @DynamicPropertySource
     static void uploadsDir(DynamicPropertyRegistry registry) {
         registry.add("ponte.uploads.dir", () -> tempUploads.toString());
+        // banco próprio: este contexto forka com ddl-auto=create e derrubaria
+        // o schema do H2 nomeado compartilhado com os outros contextos de teste
+        registry.add("spring.datasource.url", () -> "jdbc:h2:mem:ponte-picto;DB_CLOSE_DELAY=-1");
     }
 
     @Autowired MockMvc mvc;

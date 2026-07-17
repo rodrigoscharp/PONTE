@@ -18,12 +18,16 @@ const CATEGORY_NAMES = {
 
 async function init() {
   try {
-    const profiles = await fetch(`${API}/profiles`).then((r) => r.json());
+    const profilesRes = await fetch(`${API}/profiles`);
+    if (!profilesRes.ok) throw new Error(`profiles ${profilesRes.status}`);
+    const profiles = await profilesRes.json();
     if (!profiles.length) throw new Error('nenhum perfil');
     const child = profiles[0];
     document.getElementById('child-name').textContent = child.displayName;
 
-    const summary = await fetch(`${API}/usage/summary?childId=${child.id}`).then((r) => r.json());
+    const summaryRes = await fetch(`${API}/usage/summary?childId=${child.id}`);
+    if (!summaryRes.ok) throw new Error(`summary ${summaryRes.status}`);
+    const summary = await summaryRes.json();
 
     document.getElementById('tile-taps').textContent = summary.totalTaps;
     document.getElementById('tile-sentences').textContent = summary.sentencesSpoken;
@@ -31,7 +35,8 @@ async function init() {
 
     renderBars(summary.topSymbols);
     renderLegend(summary.topSymbols);
-  } catch {
+  } catch (err) {
+    console.error('Falha ao carregar o painel:', err);
     const bars = document.getElementById('bars');
     bars.innerHTML = '';
     const error = document.createElement('p');

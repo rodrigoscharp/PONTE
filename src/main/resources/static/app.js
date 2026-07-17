@@ -23,7 +23,8 @@ async function init() {
     renderGrid();
     renderSentence();
     flushQueue(); // reenviar eventos que ficaram na fila de uma sessão offline
-  } catch {
+  } catch (err) {
+    console.error('Falha ao carregar a prancha:', err);
     document.getElementById('grid').innerHTML =
       '<p class="load-error">Não foi possível carregar a prancha. Verifique a conexão e recarregue a página.</p>';
   }
@@ -123,6 +124,7 @@ function readQueue() {
     const parsed = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]');
     return Array.isArray(parsed) ? parsed : [];
   } catch {
+    console.warn('Fila de eventos corrompida; recomeçando vazia.');
     return []; // storage corrompido: recomeça a fila em vez de travar os toques
   }
 }
@@ -159,9 +161,11 @@ async function flushQueue() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(queue[0]),
         });
-        // 4xx = rejeição definitiva (ex.: consentimento revogado): descarta o
-        // evento para não travar a fila; 5xx = problema transitório: tenta depois.
-        if (res.status >= 500) break;
+        // 5xx, 429 e 408 = problema transitório: tenta depois; demais 4xx =
+        // rejeição definitiva (ex.: consentimento revogado): descarta o evento
+        // para não travar a fila.
+        if (res.status >= 500 || res.status === 429 || res.status === 408) break;
+        if (!res.ok) console.warn('Evento de uso descartado pelo servidor:', res.status);
       } catch {
         break; // sem rede no meio do flush: o restante fica na fila
       }
@@ -221,8 +225,9 @@ async function maybeSuggest() {
       const { suggestions } = await res.json();
       if (suggestions.length > 0) suggestion = suggestions[0];
     }
-  } catch {
+  } catch (err) {
     // offline: sem sugestão — a prancha continua funcionando normalmente
+    console.warn('Predição indisponível:', err);
   }
   if (requestId !== suggestRequestId) return; // resposta antiga: o estado já mudou
   if (suggestion) {
