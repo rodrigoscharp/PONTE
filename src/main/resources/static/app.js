@@ -190,13 +190,24 @@ document.getElementById('btn-undo').addEventListener('click', () => {
 
 document.getElementById('btn-clear').addEventListener('click', clearSentence);
 
-async function maybeSuggest() {
+// Sequência das requisições de predição: só a resposta da requisição mais
+// recente pode mexer na UI — resposta antiga chegando atrasada é descartada
+// (senão uma sugestão obsoleta reapareceria depois de a frase mudar).
+let suggestRequestId = 0;
+
+function hideSuggestion() {
   const el = document.getElementById('suggestion');
+  el.hidden = true;
+  el.innerHTML = '';
+}
+
+async function maybeSuggest() {
+  const requestId = ++suggestRequestId;
   if (state.sentence.length < 2) {
-    el.hidden = true;
-    el.innerHTML = '';
+    hideSuggestion();
     return;
   }
+  let suggestion = null;
   try {
     const res = await fetch(`${API}/predictions`, {
       method: 'POST',
@@ -206,11 +217,18 @@ async function maybeSuggest() {
         symbolIds: state.sentence.map((s) => s.id),
       }),
     });
-    if (!res.ok) return;
-    const { suggestions } = await res.json();
-    if (suggestions.length > 0) showSuggestion(suggestions[0]);
+    if (res.ok) {
+      const { suggestions } = await res.json();
+      if (suggestions.length > 0) suggestion = suggestions[0];
+    }
   } catch {
     // offline: sem sugestão — a prancha continua funcionando normalmente
+  }
+  if (requestId !== suggestRequestId) return; // resposta antiga: o estado já mudou
+  if (suggestion) {
+    showSuggestion(suggestion);
+  } else {
+    hideSuggestion(); // predição vazia ou falha: não deixar chip obsoleto clicável
   }
 }
 
