@@ -202,6 +202,19 @@ dialog menu {
 }
 dialog .btn-action { padding: 0.6rem 1.1rem; }
 
+/* ---------- dialog de consentimento (LGPD) ---------- */
+.consent-purpose {
+  margin: 0 0 1rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+.dialog-error {
+  color: #B91C1C;
+  font-size: 0.9rem;
+  margin: -0.4rem 0 0.6rem;
+}
+
 /* ---------- dashboard do terapeuta ---------- */
 .dash-main {
   width: min(48rem, 100%);

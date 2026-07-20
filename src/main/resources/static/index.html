@@ -18,6 +18,7 @@
     <nav class="topbar-actions">
       <button id="btn-add" class="btn-ghost" aria-label="Adicionar símbolo">＋</button>
       <a class="btn-ghost" href="/dashboard.html" aria-label="Painel do terapeuta">📈</a>
+      <button id="btn-revoke-consent" class="btn-ghost" aria-label="Revogar consentimento" hidden>🔓</button>
     </nav>
   </header>
 
@@ -33,6 +34,24 @@
   <section id="suggestion" class="suggestion" aria-label="Sugestão de frase" hidden></section>
 
   <main id="grid" class="grid" aria-label="Prancha de símbolos"></main>
+
+  <dialog id="consent-gate">
+    <form id="consent-form">
+      <h2>Autorização do responsável</h2>
+      <p class="consent-purpose">
+        Para usar a prancha, um responsável precisa autorizar o registro de uso da
+        criança, conforme a LGPD. Finalidade: registro de uso da prancha para
+        acompanhamento terapêutico.
+      </p>
+      <label>Nome do responsável
+        <input type="text" name="guardianName" required maxlength="80" autocomplete="off">
+      </label>
+      <p id="consent-error" class="dialog-error" hidden></p>
+      <menu>
+        <button type="submit" class="btn-action btn-speak">Autorizar</button>
+      </menu>
+    </form>
+  </dialog>
 
   <dialog id="add-dialog">
     <form id="add-form">

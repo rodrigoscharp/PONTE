@@ -1,4 +1,4 @@
-const CACHE = 'ponte-v3'; // bump a cada mudança de asset estático
+const CACHE = 'ponte-v4'; // bump a cada mudança de asset estático
 const SHELL = [
   '/',
   '/index.html',

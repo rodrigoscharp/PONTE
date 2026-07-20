@@ -18,16 +18,27 @@ async function init() {
   try {
     const profiles = await fetch(`${API}/profiles`).then((r) => r.json());
     if (!profiles.length) throw new Error('nenhum perfil');
-    state.childId = profiles[0].id;
-    state.symbols = await fetch(`${API}/symbols?childId=${state.childId}`).then((r) => r.json());
-    renderGrid();
-    renderSentence();
-    flushQueue(); // reenviar eventos que ficaram na fila de uma sessão offline
+    const profile = profiles[0];
+    state.childId = profile.id;
+    if (profile.hasActiveConsent) {
+      document.getElementById('btn-revoke-consent').hidden = false;
+      await loadBoard();
+    } else {
+      // sem consentimento ativo: bloqueia a prancha até o responsável autorizar
+      document.getElementById('consent-gate').showModal();
+    }
   } catch (err) {
     console.error('Falha ao carregar a prancha:', err);
     document.getElementById('grid').innerHTML =
       '<p class="load-error">Não foi possível carregar a prancha. Verifique a conexão e recarregue a página.</p>';
   }
+}
+
+async function loadBoard() {
+  state.symbols = await fetch(`${API}/symbols?childId=${state.childId}`).then((r) => r.json());
+  renderGrid();
+  renderSentence();
+  flushQueue(); // reenviar eventos que ficaram na fila de uma sessão offline
 }
 
 function renderGrid() {
@@ -295,5 +306,61 @@ function setupAddSymbol() {
 }
 
 setupAddSymbol();
+
+// Finalidade fixa: o responsável confirma, não redige — evita que a
+// finalidade registrada varie por família (consentimento informado real).
+const CONSENT_PURPOSE = 'Registro de uso da prancha para acompanhamento terapêutico';
+
+function setupConsentGate() {
+  const dialog = document.getElementById('consent-gate');
+  const form = document.getElementById('consent-form');
+  const errorEl = document.getElementById('consent-error');
+  const submitButton = form.querySelector('button[type="submit"]');
+
+  // gate não pode ser fechado sem autorizar (Esc não pode liberar a prancha)
+  dialog.addEventListener('cancel', (event) => event.preventDefault());
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    errorEl.hidden = true;
+    submitButton.disabled = true;
+    const guardianName = new FormData(form).get('guardianName');
+    try {
+      const res = await fetch(`${API}/profiles/${state.childId}/consent`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ guardianName, purpose: CONSENT_PURPOSE }),
+      });
+      if (!res.ok) throw new Error();
+      dialog.close();
+      document.getElementById('btn-revoke-consent').hidden = false;
+      await loadBoard();
+    } catch {
+      errorEl.textContent = 'Não foi possível registrar a autorização. Verifique a conexão e tente de novo.';
+      errorEl.hidden = false;
+    } finally {
+      submitButton.disabled = false;
+    }
+  });
+}
+
+function setupRevokeConsent() {
+  document.getElementById('btn-revoke-consent').addEventListener('click', async () => {
+    const confirmed = confirm(
+      'Revogar o consentimento bloqueia o uso da prancha até uma nova autorização. Continuar?'
+    );
+    if (!confirmed) return;
+    try {
+      const res = await fetch(`${API}/profiles/${state.childId}/consent/revoke`, { method: 'POST' });
+      if (!res.ok) throw new Error();
+      location.reload();
+    } catch {
+      alert('Não foi possível revogar o consentimento. Verifique a conexão e tente de novo.');
+    }
+  });
+}
+
+setupConsentGate();
+setupRevokeConsent();
 
 init();
