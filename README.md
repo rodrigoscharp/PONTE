@@ -113,7 +113,7 @@ ponte:
 
 - [x] MVP completo (M1–M5): prancha, eventos offline, símbolo por foto, predição, dashboard, PWA
 - [x] Captura real de consentimento LGPD na interface (gate duro antes do piloto com famílias)
-- [ ] Limite de dimensões de imagem no upload (proteção contra bomba de descompressão)
+- [x] Limite de dimensões de imagem no upload (proteção contra bomba de descompressão)
 - [ ] Autenticação e ownership (dashboard e predição)
 - [ ] Migração H2 → Postgres
 - [ ] IA real de pictogramas e predição (plug das chaves de API)

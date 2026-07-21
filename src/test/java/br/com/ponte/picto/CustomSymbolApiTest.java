@@ -52,6 +52,15 @@ class CustomSymbolApiTest {
         return out.toByteArray();
     }
 
+    private byte[] fakeOversizedPhoto() throws Exception {
+        // 1px de altura: dimensão só precisa exceder o limite num dos lados,
+        // não precisa alocar muita memória para reproduzir o teste
+        BufferedImage img = new BufferedImage(8001, 1, BufferedImage.TYPE_INT_RGB);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ImageIO.write(img, "png", out);
+        return out.toByteArray();
+    }
+
     @Test
     void fotoViraSimboloNoFimDaPranchaSemMoverOsExistentes() throws Exception {
         Long childId = profiles.findAll().get(0).getId();
@@ -91,6 +100,17 @@ class CustomSymbolApiTest {
                 .file(new MockMultipartFile("photo", "x.txt", "text/plain", "nada".getBytes()))
                 .param("childId", childId.toString())
                 .param("label", "coisa"))
+           .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void fotoComDimensoesAcimaDoLimiteEhRejeitada() throws Exception {
+        Long childId = profiles.findAll().get(0).getId();
+
+        mvc.perform(multipart("/api/v1/symbols/custom")
+                .file(new MockMultipartFile("photo", "gigante.png", "image/png", fakeOversizedPhoto()))
+                .param("childId", childId.toString())
+                .param("label", "gigante"))
            .andExpect(status().isBadRequest());
     }
 }
